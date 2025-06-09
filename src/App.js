@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import FitParser from 'fit-file-parser';
+import { findBestRecordArray } from './lib/fallback';
 
 export default function App() {
   const [records, setRecords] = useState([]);
@@ -23,7 +24,24 @@ export default function App() {
           console.error('Error parsing .fit file:', error);
           return;
         }
-        setRecords(data.records || []);
+
+        console.log('FIT file parsed successfully');
+
+        // Primary record extraction
+        let records = data.records || [];
+
+        // Fallback to deep search
+        if (!records.length) {
+          const fallback = findBestRecordArray(data);
+          if (fallback) {
+            console.log(`Using fallback records from: ${fallback.path}, count: ${fallback.records.length}`);
+            records = fallback.records;
+          } else {
+            console.warn('No valid records found, even with fallback.');
+          }
+        }
+
+        setRecords(records);
       });
     };
 
